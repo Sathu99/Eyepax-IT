@@ -1,24 +1,24 @@
-import logo from './logo.svg';
-import './App.css';
-
+// import TeamShow from "./Views/TeamShow";
+import TeamEdit from "./Views/TeamEdit";
+import TeamShow from "./Views/TeamShow";
+import { BrowserRouter as Router, Switch, Route, Redirect } from "react-router-dom";
 function App() {
   return (
-    <div className="App">
-      <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
-        <p>
-          Edit <code>src/App.js</code> and save to reload.
-        </p>
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Learn React
-        </a>
-      </header>
-    </div>
+    <Router>
+      <Switch>
+        <Redirect exact path="/" to="/team"/>
+        <Route
+          path="/team"
+          exact
+          render={(routeprops) => <TeamShow {...routeprops} />}
+        />
+        <Route
+          path="/team/edit/:id"
+          render={(routeprops) => <TeamEdit {...routeprops} />}
+        />
+        <Route path="*" component={""} />
+      </Switch>
+    </Router>
   );
 }
 
