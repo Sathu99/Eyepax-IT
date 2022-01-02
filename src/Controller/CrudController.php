@@ -3,14 +3,12 @@
 namespace App\Controller;
 
 use App\Entity\SalesReps;
-use App\Form\SalesRepType;
-use Psr\Container\ContainerExceptionInterface;
-use Psr\Container\NotFoundExceptionInterface;
+use App\Repository\SalesRepsRepository;
+use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
-use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
-use Symfony\Component\PropertyAccess\PropertyAccess;
 use Symfony\Component\Routing\Annotation\Route;
+use Symfony\Component\Validator\Validator\ValidatorInterface;
 
 /**
  * @Route("/api/team", name="team_api.")
@@ -18,15 +16,44 @@ use Symfony\Component\Routing\Annotation\Route;
 class CrudController extends AbstractApiController
 {
     /**
+     * @var \App\Repository\SalesRepsRepository
+     */
+    private $salesRepsRepository;
+    /**
+     * @var \Doctrine\ORM\EntityManagerInterface
+     */
+    private $entityManager;
+    /**
+     * @var \Symfony\Component\Validator\Validator\ValidatorInterface
+     */
+    private $validator;
+
+    /**
+     * @param \App\Repository\SalesRepsRepository $salesRepsRepository
+     * @param \Doctrine\ORM\EntityManagerInterface $entityManager
+     * @param \Symfony\Component\Validator\Validator\ValidatorInterface $validator
+     */
+    public function __construct(SalesRepsRepository $salesRepsRepository, EntityManagerInterface $entityManager, validatorinterface $validator)
+    {
+        $this->salesRepsRepository = $salesRepsRepository;
+        $this->entityManager = $entityManager;
+        $this->validator = $validator;
+    }
+
+
+    /**
      * @Route("/view/{id<\d+>}", name="view_data",methods={"GET"})
      * @param int $id
      * @return Response
      */
     public function viewRow(int $id): Response
     {
-        $rep = $this->getDoctrine()->getRepository(SalesReps::class)->find($id);
+        $rep = $this->salesRepsRepository->find($id);
         if (!$rep) {
-            throw new NotFoundHttpException("User not found");
+            return $this->respond([
+                'type' => 'error',
+                'msg' => 'There is no any user exit with this ID.'
+            ], Response::HTTP_NOT_FOUND);
         } else {
             return $this->respond($rep);
         }
@@ -36,55 +63,44 @@ class CrudController extends AbstractApiController
      * @Route("/add",name="add_row",methods={"POST"})
      * @param Request $request
      * @return Response
-     * @throws ContainerExceptionInterface
-     * @throws NotFoundExceptionInterface
      */
 
     public function create(Request $request): Response
     {
-        $propertyAccessor = PropertyAccess::createPropertyAccessor();
 
-        $form = $this->buildForm(SalesRepType::class);
+        $salesReps = json_decode($request->getContent(), true);
 
+        if ($salesReps) {
+            $newSaleRep = new SalesReps($salesReps['name'], $salesReps['email'], $salesReps['telephone'], $salesReps['route'], date_create($salesReps['joinedDate']), $salesReps['comment']);
+            $errors = $this->validator->validate($newSaleRep);
+            if (!(count($errors) > 0)) {
+                /** @var SalesReps $salesReps */
+                $rep = $this->salesRepsRepository->findBy(['email' => $salesReps['email']]);
 
-        $form->handleRequest($request);
+                if ($rep) {
+                    return $this->respond([
+                        'type' => 'error',
+                        'message' => 'This Email Address is already exit.',
+                    ], Response::HTTP_ALREADY_REPORTED);
+                } else {
+                    $this->entityManager->persist($newSaleRep);
+                    $this->entityManager->flush();
 
-        if (!$form->isSubmitted() || !$form->isValid()) {
-            return $this->respond($form, Response::HTTP_BAD_REQUEST);
-        } else {
-            /** @var SalesReps $salesReps */
-            $salesReps = $form->getData();
-            $rep = $this->getDoctrine()->getRepository(SalesReps::class)->findBy(['email' => $propertyAccessor->getValue($salesReps, 'email')]);
-            if ($rep) {
+                    return $this->respond($newSaleRep);
+                }
+            } else {
                 return $this->respond([
                     'type' => 'error',
-                    'message' => 'This Email Address is already exit.'
-                ],Response::HTTP_BAD_REQUEST);
-            } else {
-                $this->getDoctrine()->getManager()->persist($salesReps);
-                $this->getDoctrine()->getManager()->flush();
-
-                return $this->respond($salesReps);
+                    'msg' => 'Your details are invalid.',
+                    'data' => $errors
+                ], Response::HTTP_UNPROCESSABLE_ENTITY);
             }
-
+        } else {
+            return $this->respond([
+                'type' => 'error',
+                'msg' => 'no data'
+            ], Response::HTTP_UNPROCESSABLE_ENTITY);
         }
-
-
-//        $entityManager = $this->getDoctrine()->getManager();
-//
-//        $rep = new SalesReps();
-//        $rep->setName();
-//        $rep->setEmail();
-//        $rep->setTelephone();
-//        $rep->setRoute();
-//        $rep->setJDate();
-//        $rep->setComment();
-//
-//        $entityManager->persist($rep);
-//
-//        $entityManager->flush();
-
-//        return new Response();
     }
 
     /**
@@ -92,34 +108,57 @@ class CrudController extends AbstractApiController
      * @param int $id
      * @param Request $request
      * @return Response
-     * @throws ContainerExceptionInterface
-     * @throws NotFoundExceptionInterface
      */
     public function update(int $id, Request $request): Response
     {
-        $rep = $this->getDoctrine()->getRepository(SalesReps::class)->find($id);
+        $rep = $this->salesRepsRepository->find($id);
+        $salesReps = json_decode($request->getContent(), true);
+
         if (!$rep) {
-            throw new NotFoundHttpException("User not found");
+            return $this->respond([
+                'type' => 'error',
+                'msg' => 'There is no any user exit with this ID.'
+            ], Response::HTTP_NOT_FOUND);
         } else {
+            if ($salesReps) {
 
+                $rep->setName($salesReps['name']);
+                $rep->setEmail($salesReps['email']);
+                $rep->setRoute($salesReps['route']);
+                $rep->setTelephone($salesReps['telephone']);
+                $rep->setJoinedDate(date_create($salesReps['joinedDate']));
+                $rep->setComment($salesReps['comment']);
 
-            $form = $this->buildForm(SalesRepType::class, $rep, [
-                'method' => $request->getMethod(),
-            ]);
+                $errors = $this->validator->validate($rep);
 
-            $form->handleRequest($request);
+                if (!(count($errors) > 0)) {
+                    $oldRep = $this->salesRepsRepository->findBy(['email' => $salesReps['email']]);
 
-            if (!$form->isSubmitted() || !$form->isValid()) {
-                return $this->respond($form, Response::HTTP_BAD_REQUEST);
+                    if ($oldRep && !($oldRep[0]->getId() === $rep->getId())) {
+                        return $this->respond([
+                            'type' => 'error',
+                            'message' => 'This Email Address is already exit.',
+                        ], Response::HTTP_ALREADY_REPORTED);
+                    } else {
+                        /** @var SalesReps $salesReps */
+
+                        $this->entityManager->persist($rep);
+                        $this->entityManager->flush();
+
+                        return $this->respond($rep);
+                    }
+                } else {
+                    return $this->respond([
+                        'type' => 'error',
+                        'msg' => 'Your details are invalid.',
+                        'data' => $errors
+                    ], Response::HTTP_UNPROCESSABLE_ENTITY);
+                }
             } else {
-                /** @var SalesReps $salesReps */
-                $salesReps = $form->getData();
-
-                $this->getDoctrine()->getManager()->persist($salesReps);
-                $this->getDoctrine()->getManager()->flush();
-
-                return $this->respond($salesReps);
-
+                return $this->respond([
+                    'type' => 'error',
+                    'msg' => 'no data'
+                ], Response::HTTP_UNPROCESSABLE_ENTITY);
             }
         }
     }
@@ -132,12 +171,15 @@ class CrudController extends AbstractApiController
     public
     function delete(int $id): Response
     {
-        $rep = $this->getDoctrine()->getRepository(SalesReps::class)->find($id);
+        $rep = $this->salesRepsRepository->find($id);
         if (!$rep) {
-            throw new NotFoundHttpException("User not found");
+            return $this->respond([
+                'type' => 'error',
+                'msg' => 'There is no any user exit with this ID.'
+            ], Response::HTTP_NOT_FOUND);
         } else {
-            $this->getDoctrine()->getManager()->remove($rep);
-            $this->getDoctrine()->getManager()->flush();
+            $this->entityManager->remove($rep);
+            $this->entityManager->flush();
             return $this->json([
                 'type' => 'success',
                 'message' => 'User successfully removed'
@@ -152,7 +194,7 @@ class CrudController extends AbstractApiController
     public
     function viewAll(): Response
     {
-        $allReps = $this->getDoctrine()->getRepository(SalesReps::class)->findAll();
+        $allReps = $this->salesRepsRepository->findAll();
 
         return $this->respond($allReps);
     }
