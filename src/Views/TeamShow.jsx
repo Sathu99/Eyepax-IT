@@ -1,57 +1,32 @@
-import React, { useEffect, useState, useCallback, useMemo } from "react";
-import StickyHeadTable from "../Components/Table";
-import Dialog from "@material-ui/core/Dialog";
-import DialogContent from "@material-ui/core/DialogContent";
-import DialogContentText from "@material-ui/core/DialogContentText";
-import DialogTitle from "@material-ui/core/DialogTitle";
-import TextField from "@material-ui/core/TextField";
-import { Grid, Button, DialogActions } from "@material-ui/core";
-import { makeStyles, withStyles } from "@material-ui/core/styles";
-import SaveIcon from "@material-ui/icons/Save";
-import Validate from "../utils/validate";
-import Typography from "@material-ui/core/Typography";
-import CloseIcon from "@material-ui/icons/Close";
-import IconButton from "@material-ui/core/IconButton";
-import Loader from "react-loader-spinner";
-import axios from "axios";
-import Notification from "../Components/Notification";
-
-const source = axios.CancelToken.source();
-
-const routes = [
-  {
-    value: "0",
-    label: "Current Route",
-    disable: true,
-  },
-  {
-    value: "colombo",
-    label: "Colombo",
-    disable: false,
-  },
-  {
-    value: "jaffna",
-    label: "Jaffna",
-    disable: false,
-  },
-  {
-    value: "kandy",
-    label: "Kandy",
-    disable: false,
-  },
-  {
-    value: "vavniya",
-    label: "Vavuniya",
-    disable: false,
-  },
-];
+import React, { useEffect, useState, useCallback, useMemo } from 'react';
+import {
+  Grid,
+  Button,
+  Dialog,
+  DialogContent,
+  DialogContentText,
+  DialogTitle,
+  TextField,
+  Typography,
+  DialogActions,
+  IconButton,
+} from '@material-ui/core';
+import { makeStyles, withStyles } from '@material-ui/core/styles';
+import SaveIcon from '@material-ui/icons/Save';
+import CloseIcon from '@material-ui/icons/Close';
+import axios from 'axios';
+import Notification from '../Components/Notification';
+import StickyHeadTable from '../Components/Table';
+import { column, routes } from '../data/List';
+import Spinner from '../Components/Spinner';
+import Validate from '../utils/validate';
 
 const styles = (theme) => ({
   title: {
-    backgroundColor: "lightgrey",
+    backgroundColor: 'lightgrey',
   },
   closeButton: {
-    position: "absolute",
+    position: 'absolute',
     right: theme.spacing(1),
     top: theme.spacing(1),
     color: theme.palette.grey[500],
@@ -78,21 +53,21 @@ const StyledDialogTitle = withStyles(styles)((props) => {
 
 const ValidationTextField = withStyles({
   root: {
-    "& input: + fieldset": {
-      borderColor: "grey",
+    '& input: + fieldset': {
+      borderColor: 'grey',
       borderWidth: 2,
     },
-    "& input:valid + fieldset": {
-      borderColor: "green",
+    '& input:valid + fieldset': {
+      borderColor: 'green',
       borderWidth: 2,
     },
-    "& input:invalid + fieldset": {
-      borderColor: "red",
+    '& input:invalid + fieldset': {
+      borderColor: 'red',
       borderWidth: 2,
     },
-    "& input:valid:focus + fieldset": {
+    '& input:valid:focus + fieldset': {
       borderLeftWidth: 6,
-      padding: "4px !important", // override inline-style
+      padding: '4px !important', // override inline-style
     },
   },
 })(TextField);
@@ -104,117 +79,81 @@ const useStyles = makeStyles((theme) => ({
   },
   paper: {
     padding: theme.spacing(2),
-    textAlign: "left",
+    textAlign: 'left',
     color: theme.palette.text.secondary,
   },
   box: {
     height: 20,
-    display: "flex",
+    display: 'flex',
     padding: 12,
   },
   centerBox: {
-    justifyContent: "center",
-    alignItems: "center",
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   field: {
     margin: 24,
   },
 }));
 
-function TeamShow(props) {
+const TeamShow = () => {
   const classes = useStyles();
-
   const [openView, setOpenView] = useState(false);
   const [openAdd, setOpenAdd] = useState(false);
-  const [openDelete, setOpenDelete] = React.useState(false);
-
+  const [openDelete, setOpenDelete] = useState(false);
   const [person, setPerson] = useState([]);
-
   const [fields, setFiels] = useState({});
   const [validationResult, setValidationResult] = useState({});
-  const [alertStates, setAlertStates] = React.useState({
+  const [alertStates, setAlertStates] = useState({
     openAlert: false,
-    vertical: "top",
-    horizontal: "center",
-    type: "info",
-    msg: "info",
+    vertical: 'top',
+    horizontal: 'center',
+    type: 'info',
+    msg: 'info',
   });
-
   const [data, setData] = useState([]);
-
-  const columns = useMemo(
-    () => [
-      { id: "id", label: "ID", minWidth: 50 },
-      { id: "name", label: "Name", minWidth: 100, align: "left" },
-      {
-        id: "email",
-        label: "Email",
-        minWidth: 100,
-        align: "left",
-      },
-
-      {
-        id: "telephone",
-        label: "Telephone",
-        minWidth: 100,
-        align: "center",
-      },
-      {
-        id: "route",
-        label: "Current Routes",
-        minWidth: 150,
-        align: "center",
-      },
-    ],
-    []
-  );
+  const columns = useMemo(() => column, []);
 
   useEffect(() => {
     axios({
-      url: "http://127.0.0.1:8000/api/team/getall",
-      method: "GET",
+      url: 'http://127.0.0.1:8000/api/team/getall',
+      method: 'GET',
       headers: {
-        "Content-Type": "application/json",
+        'Content-Type': 'application/json',
       },
-      // cancelToken: source.token,
     })
       .then((res) => {
         if (res.status === 200) {
           setData(res.data);
           setAlertStates({
             openAlert: true,
-            msg: "Data was Successfully fetched",
-            vertical: "top",
-            horizontal: "center",
-            type: "success",
+            msg: 'Data was Successfully fetched',
+            vertical: 'top',
+            horizontal: 'center',
+            type: 'success',
           });
         }
       })
       .catch((err) => {
         setAlertStates({
           openAlert: true,
-          msg: "There is somthig wrong try again later.",
-          vertical: "top",
-          horizontal: "right",
-          type: "error",
+          msg: 'There is somthig wrong try again later.',
+          vertical: 'top',
+          horizontal: 'right',
+          type: 'error',
         });
         console.log({ err });
       });
-    return () => {
-      source.cancel("Request Canceled");
-    };
   }, []);
 
   const handleInputChange = (event) => {
-    const target = event.target;
-    const value = target.value;
     const name = target.id;
-    fields[name] = value;
+    fields[name] = event.target.value;
     setFiels({ ...fields });
   };
 
   const clearFun = (e) => {
-    validationResult[e.target.id] = "Filled";
+    validationResult[e.target.id] = 'Filled';
     setValidationResult({ ...validationResult });
   };
 
@@ -248,34 +187,33 @@ function TeamShow(props) {
   );
 
   const handleCloseDelete = (e) => {
-    if (e === "yes") {
-      console.log("delete");
+    if (e === 'yes') {
+      console.log('delete');
       axios({
         url: `http://127.0.0.1:8000/api/team/delete/${person[0].id}`,
-        method: "DELETE",
+        method: 'DELETE',
         headers: {
-          "Content-Type": "application/json",
+          'Content-Type': 'application/json',
         },
-        // cancelToken: source.token,
       })
         .then((res) => {
           setPerson([]);
           setData(data.filter((emp) => emp.id !== person[0].id));
           setAlertStates({
             openAlert: true,
-            msg: "Data is Deleted Successfully",
-            vertical: "top",
-            horizontal: "center",
-            type: "success",
+            msg: 'Data is Deleted Successfully',
+            vertical: 'top',
+            horizontal: 'center',
+            type: 'success',
           });
         })
         .catch((err) => {
           setAlertStates({
             openAlert: true,
-            msg: "There is an error at Delete this Data",
-            vertical: "top",
-            horizontal: "right",
-            type: "error",
+            msg: 'There is an error at Delete this Data',
+            vertical: 'top',
+            horizontal: 'right',
+            type: 'error',
           });
           console.log({ err });
         });
@@ -288,23 +226,22 @@ function TeamShow(props) {
     console.log(fields, validationResult);
     if (Validate(fields).count >= 5) {
       axios({
-        url: "http://127.0.0.1:8000/api/team/add",
-        method: "POST",
+        url: 'http://127.0.0.1:8000/api/team/add',
+        method: 'POST',
         headers: {
-          "Content-Type": "application/json",
+          'Content-Type': 'application/json',
         },
         data: JSON.stringify(fields),
-        // cancelToken: source.token,
       })
         .then((res) => {
           if (res.status === 200) {
             handleCloseAdd();
             setAlertStates({
               openAlert: true,
-              msg: "Sales Representative Data Successfuly Registered.",
-              vertical: "top",
-              horizontal: "center",
-              type: "success",
+              msg: 'Sales Representative Data Successfuly Registered.',
+              vertical: 'top',
+              horizontal: 'center',
+              type: 'success',
             });
             setData([...data, res.data]);
             console.log(res.data);
@@ -315,19 +252,19 @@ function TeamShow(props) {
           setAlertStates({
             openAlert: true,
             msg: error.err.response.data.message,
-            vertical: "top",
-            horizontal: "right",
-            type: "error",
+            vertical: 'top',
+            horizontal: 'right',
+            type: 'error',
           });
           console.log(error);
         });
     } else {
       setAlertStates({
         openAlert: true,
-        msg: "Your entered Data in Not valid. Check it and try again.",
-        vertical: "top",
-        horizontal: "left",
-        type: "warning",
+        msg: 'Your entered Data in Not valid. Check it and try again.',
+        vertical: 'top',
+        horizontal: 'left',
+        type: 'warning',
       });
     }
   };
@@ -354,9 +291,9 @@ function TeamShow(props) {
             <DialogTitle
               id="customized-dialog-title"
               onClose={handleCloseView}
-              style={{ backgroundColor: "lightgray" }}
+              style={{ backgroundColor: 'lightgray' }}
             >
-              {person[0].name} {"=>"} Details
+              {person[0].name} {'=>'} Details
             </DialogTitle>
             <DialogContent style={{ minWidth: 400 }}>
               <div className={classes.root}>
@@ -375,15 +312,15 @@ function TeamShow(props) {
                     <h4 className={classes.paper}>{person[0].telephone}</h4>
                     <h4 className={classes.paper}>
                       {new Date(person[0].joinedDate).getFullYear() +
-                        "-" +
+                        '-' +
                         (new Date(person[0].joinedDate).getMonth() > 8
                           ? new Date(person[0].joinedDate).getMonth() + 1
-                          : "0" +
+                          : '0' +
                             (new Date(person[0].joinedDate).getMonth() + 1)) +
-                        "-" +
+                        '-' +
                         (new Date(person[0].joinedDate).getDate() > 9
                           ? new Date(person[0].joinedDate).getDate()
-                          : "0" + new Date(person[0].joinedDate).getDate())}
+                          : '0' + new Date(person[0].joinedDate).getDate())}
                     </h4>
                     <h4 className={classes.paper}>{person[0].route}</h4>
                     <h4 className={classes.paper}>{person[0].comment}</h4>
@@ -417,8 +354,8 @@ function TeamShow(props) {
                 <div className={classes.field}>
                   <ValidationTextField
                     error={
-                      validationResult["name"] !== undefined &&
-                      validationResult.name !== "Filled"
+                      validationResult['name'] !== undefined &&
+                      validationResult.name !== 'Filled'
                         ? true
                         : false
                     }
@@ -435,8 +372,8 @@ function TeamShow(props) {
                 <div className={classes.field}>
                   <ValidationTextField
                     error={
-                      validationResult["email"] !== undefined &&
-                      validationResult.email !== "Filled"
+                      validationResult['email'] !== undefined &&
+                      validationResult.email !== 'Filled'
                         ? true
                         : false
                     }
@@ -453,8 +390,8 @@ function TeamShow(props) {
                 <div className={classes.field}>
                   <ValidationTextField
                     error={
-                      validationResult["telephone"] !== undefined &&
-                      validationResult.telephone !== "Filled"
+                      validationResult['telephone'] !== undefined &&
+                      validationResult.telephone !== 'Filled'
                         ? true
                         : false
                     }
@@ -471,8 +408,8 @@ function TeamShow(props) {
                 <div className={classes.field}>
                   <ValidationTextField
                     error={
-                      validationResult["joinedDate"] !== undefined &&
-                      validationResult.joinedDate !== "Filled"
+                      validationResult['joinedDate'] !== undefined &&
+                      validationResult.joinedDate !== 'Filled'
                         ? true
                         : false
                     }
@@ -493,15 +430,15 @@ function TeamShow(props) {
                     id="route"
                     select
                     error={
-                      validationResult["route"] !== undefined &&
-                      validationResult.route !== "Filled"
+                      validationResult['route'] !== undefined &&
+                      validationResult.route !== 'Filled'
                         ? true
                         : false
                     }
                     helperText={validationResult.route}
                     label="Current Route"
                     onChange={handleInputChange}
-                    defaultValue={"0"}
+                    defaultValue={'0'}
                     style={{ width: 225 }}
                     SelectProps={{
                       native: true,
@@ -509,7 +446,7 @@ function TeamShow(props) {
                     variant="outlined"
                     onInput={clearFun}
                   >
-                    {" "}
+                    {' '}
                     {routes.map((option) => (
                       <option
                         key={option.value}
@@ -525,8 +462,8 @@ function TeamShow(props) {
                   <ValidationTextField
                     id="comment"
                     error={
-                      validationResult["comment"] !== undefined &&
-                      validationResult.comment !== "Filled"
+                      validationResult['comment'] !== undefined &&
+                      validationResult.comment !== 'Filled'
                         ? true
                         : false
                     }
@@ -566,7 +503,7 @@ function TeamShow(props) {
             disableBackdropClick="true"
           >
             <DialogTitle id="alert-dialog-title">
-              {"Delete Member from Team"}
+              {'Delete Member from Team'}
             </DialogTitle>
             <DialogContent>
               <DialogContentText id="alert-dialog-description">
@@ -576,14 +513,14 @@ function TeamShow(props) {
             <DialogActions>
               <Button
                 id="no"
-                onClick={() => handleCloseDelete("no")}
+                onClick={() => handleCloseDelete('no')}
                 color="primary"
               >
                 Disagree
               </Button>
               <Button
                 id="yes"
-                onClick={() => handleCloseDelete("yes")}
+                onClick={() => handleCloseDelete('yes')}
                 color="primary"
                 autoFocus
               >
@@ -596,31 +533,6 @@ function TeamShow(props) {
       </div>
     );
   }
-  return (
-    <>
-      <div
-        style={{
-          margin: "auto",
-          width: "50%",
-          position: "absolute",
-          top: "50%",
-          left: "50%",
-          fontFamily: "cursive",
-          fontWeight: "bolder",
-          fontSize: "1.5em",
-        }}
-      >
-        <Loader
-          type="Bars"
-          color="green"
-          height={100}
-          width={100}
-          secondaryColor="blue"
-        />
-        Loading ...
-      </div>
-    </>
-  );
-}
-
+  return <Spinner type="Bars" color="green" />;
+};
 export default React.memo(TeamShow);

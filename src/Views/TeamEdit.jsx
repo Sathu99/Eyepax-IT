@@ -1,215 +1,173 @@
-import React, { useEffect } from "react";
-import { makeStyles } from "@material-ui/core/styles";
-import { Button, Grid } from "@material-ui/core";
-import SaveIcon from "@material-ui/icons/Save";
-import { Forward } from "@material-ui/icons";
-import TextField from "@material-ui/core/TextField";
-import { Link } from "react-router-dom";
-import Validate from "../utils/validate";
-import Loader from "react-loader-spinner";
-import axios from "axios";
-import Notification from "../Components/Notification";
+import React, { useEffect } from 'react';
+import { makeStyles } from '@material-ui/core/styles';
+import { Button, Grid, TextField } from '@material-ui/core';
+import SaveIcon from '@material-ui/icons/Save';
+import { Forward } from '@material-ui/icons';
+import { Link, useHistory, useParams } from 'react-router-dom';
+import axios from 'axios';
+import Notification from '../Components/Notification';
+import Validate from '../utils/validate';
+import { routes } from '../data/List';
+import Spinner from '../Components/Spinner';
 
-const source = axios.CancelToken.source();
-
-const routes = [
-  {
-    value: "0",
-    label: "Current Route",
-    disable: true,
-  },
-  {
-    value: "colombo",
-    label: "Colombo",
-    disable: false,
-  },
-  {
-    value: "jaffna",
-    label: "Jaffna",
-    disable: false,
-  },
-  {
-    value: "kandy",
-    label: "Kandy",
-    disable: false,
-  },
-  {
-    value: "vavniya",
-    label: "Vavuniya",
-    disable: false,
-  },
-];
-
-const useStyles1 = makeStyles({
+const useStyles = makeStyles((theme) => ({
   body: {
-    margin: "auto",
+    margin: 'auto',
     marginTop: 50,
-    border: "1px solid black",
+    border: '1px solid black',
     minWidth: 300,
     maxWidth: 800,
   },
   topnav: {
-    overflow: "hidden",
-    backgroundColor: "lightgrey",
-    paddingLeft:25 ,
+    overflow: 'hidden',
+    backgroundColor: 'lightgrey',
+    paddingLeft: 25,
   },
   box: {
-    position: "relative",
+    position: 'relative',
     padding: 50,
     margin: 30,
   },
   topright: {
-    position: "absolute",
+    position: 'absolute',
     top: 2,
     right: 8,
   },
   bottomright: {
-    position: "absolute",
+    position: 'absolute',
     bottom: 2,
     right: 8,
   },
-});
-
-const useStyles2 = makeStyles((theme) => ({
   root: {
     flexGrow: 1,
   },
   inputs: {
     padding: theme.spacing(1),
-    textAlign: "center",
+    textAlign: 'center',
     color: theme.palette.text.black,
   },
   form: {
-    "& .MuiTextField-root": {
+    '& .MuiTextField-root': {
       margin: theme.spacing(1),
       width: 300,
     },
   },
 }));
 
-function TeamEdit(props) {
-  const classes1 = useStyles1();
-  const classes2 = useStyles2();
-
+const TeamEdit = () => {
+  const classes = useStyles();
+  const history = useHistory();
+  const { id } = useParams();
   const [fields, setFiels] = React.useState({});
   const [validationResult, setValidationResult] = React.useState({});
-
   const [alertStates, setAlertStates] = React.useState({
     openAlert: false,
-    vertical: "top",
-    horizontal: "center",
-    type: "info",
-    msg: "info",
+    vertical: 'top',
+    horizontal: 'center',
+    type: 'info',
+    msg: 'info',
   });
 
   const handleChange = (event) => {
-    const target = event.target;
-    const value = target.value;
-    const name = target.id;
-
-    fields[name] = value;
+    const name = event.target.id;
+    fields[name] = event.target.value;
     setFiels({ ...fields });
   };
 
   useEffect(() => {
     axios({
-      url: `http://127.0.0.1:8000/api/team/view/${props.match.params.id}`,
-      method: "GET",
+      url: `http://127.0.0.1:8000/api/team/view/${id}`,
+      method: 'GET',
       headers: {
-        "Content-Type": "application/json",
+        'Content-Type': 'application/json',
       },
-      // cancelToken: source.token,
     })
       .then((res) => {
         if (res.status === 200) {
           setFiels(res.data);
           setAlertStates({
             openAlert: true,
-            msg: "Your Details was Successfully fetched",
-            vertical: "top",
-            horizontal: "center",
-            type: "success",
+            msg: 'Your Details was Successfully fetched',
+            vertical: 'top',
+            horizontal: 'center',
+            type: 'success',
           });
         }
       })
       .catch((err) => {
         setAlertStates({
           openAlert: true,
-          msg: "There is somthig wrong try again later.",
-          vertical: "top",
-          horizontal: "right",
-          type: "error",
+          msg: 'There is somthig wrong try again later.',
+          vertical: 'top',
+          horizontal: 'right',
+          type: 'error',
         });
         console.log({ err });
       });
-    return () => {
-      source.cancel("Request Canceled");
-    };
-  }, [props.match.params.id]);
+  }, [id]);
 
   const clearFun = (e) => {
-    validationResult[e.target.id] = "Filled";
+    validationResult[e.target.id] = 'Filled';
     setValidationResult({ ...validationResult });
   };
 
   const handleSubmit = () => {
     setValidationResult({ ...Validate(fields).errors });
     if (Validate(fields).count >= 5) {
+      console.log(fields);
       axios({
-        url: `http://127.0.0.1:8000/api/team/update/${props.match.params.id}`,
-        method: "PUT",
+        url: `http://127.0.0.1:8000/api/team/update/${id}`,
+        method: 'PUT',
         headers: {
-          "Content-Type": "application/json",
+          'Content-Type': 'application/json',
         },
         data: JSON.stringify(fields),
-        // cancelToken: source.token,
       })
-        .then((res) => {
+        .then(() => {
           setAlertStates({
             openAlert: true,
-            msg: "Data was Successfully Updated",
-            vertical: "top",
-            horizontal: "center",
-            type: "success",
+            msg: 'Data was Successfully Updated',
+            vertical: 'top',
+            horizontal: 'center',
+            type: 'success',
           });
-          props.history.push("/team");
+          history.push('/team');
         })
         .catch((err) => {
           setAlertStates({
             openAlert: true,
-            msg: "There is somthig wrong try again later.",
-            vertical: "top",
-            horizontal: "right",
-            type: "error",
+            msg: 'There is somthig wrong try again later.',
+            vertical: 'top',
+            horizontal: 'right',
+            type: 'error',
           });
           console.log({ err });
         });
     } else {
       setAlertStates({
         openAlert: true,
-        msg: "Your entered Data in Not valid. Check it and try again.",
-        vertical: "top",
-        horizontal: "left",
-        type: "warning",
+        msg: 'Your entered Data in Not valid. Check it and try again.',
+        vertical: 'top',
+        horizontal: 'left',
+        type: 'warning',
       });
     }
   };
 
-  console.log(props);
   if (Object.keys(fields).length > 0) {
     const date = new Date(fields.joinedDate);
     return (
-      <>
-        <div className={classes1.body}>
-          <div className={classes1.topnav}>
+      <React.Fragment>
+        <div className={classes.body}>
+          <div className={classes.topnav}>
             <h2>Edit Sales Representative</h2>
           </div>
-          <div className={classes1.box}>
-            <div className={classes2.root}>
+          <div className={classes.box}>
+            <div className={classes.root}>
               <Grid container spacing={1}>
                 <Grid item xs={12} sm={12}>
-                  <form className={classes2.form} noValidate autoComplete="off">
-                    <div className={classes2.inputs}>
+                  <form className={classes.form} noValidate autoComplete="off">
+                    <div className={classes.inputs}>
                       <TextField
                         disabled
                         error={false}
@@ -221,11 +179,11 @@ function TeamEdit(props) {
                         onInput={clearFun}
                       />
                     </div>
-                    <div className={classes2.inputs}>
+                    <div className={classes.inputs}>
                       <TextField
                         error={
-                          validationResult["name"] !== undefined &&
-                          validationResult.name !== "Filled"
+                          validationResult['name'] !== undefined &&
+                          validationResult.name !== 'Filled'
                             ? true
                             : false
                         }
@@ -239,11 +197,11 @@ function TeamEdit(props) {
                         onInput={clearFun}
                       />
                     </div>
-                    <div className={classes2.inputs}>
+                    <div className={classes.inputs}>
                       <TextField
                         error={
-                          validationResult["email"] !== undefined &&
-                          validationResult.email !== "Filled"
+                          validationResult['email'] !== undefined &&
+                          validationResult.email !== 'Filled'
                             ? true
                             : false
                         }
@@ -257,11 +215,11 @@ function TeamEdit(props) {
                         onInput={clearFun}
                       />
                     </div>
-                    <div className={classes2.inputs}>
+                    <div className={classes.inputs}>
                       <TextField
                         error={
-                          validationResult["telephone"] !== undefined &&
-                          validationResult.telephone !== "Filled"
+                          validationResult['telephone'] !== undefined &&
+                          validationResult.telephone !== 'Filled'
                             ? true
                             : false
                         }
@@ -275,11 +233,11 @@ function TeamEdit(props) {
                         onInput={clearFun}
                       />
                     </div>
-                    <div className={classes2.inputs}>
+                    <div className={classes.inputs}>
                       <TextField
                         error={
-                          validationResult["joinedDate"] !== undefined &&
-                          validationResult.joinedDate !== "Filled"
+                          validationResult['joinedDate'] !== undefined &&
+                          validationResult.joinedDate !== 'Filled'
                             ? true
                             : false
                         }
@@ -288,14 +246,14 @@ function TeamEdit(props) {
                         type="date"
                         defaultValue={
                           date.getFullYear() +
-                          "-" +
+                          '-' +
                           (date.getMonth() > 8
                             ? date.getMonth() + 1
-                            : "0" + (date.getMonth() + 1)) +
-                          "-" +
+                            : '0' + (date.getMonth() + 1)) +
+                          '-' +
                           (date.getDate() > 9
                             ? date.getDate()
-                            : "0" + date.getDate())
+                            : '0' + date.getDate())
                         }
                         onChange={handleChange}
                         style={{ width: 300 }}
@@ -306,13 +264,13 @@ function TeamEdit(props) {
                         onInput={clearFun}
                       />
                     </div>
-                    <div className={classes2.inputs}>
+                    <div className={classes.inputs}>
                       <TextField
                         id="route"
                         select
                         error={
-                          validationResult["route"] !== undefined &&
-                          validationResult.route !== "Filled"
+                          validationResult['route'] !== undefined &&
+                          validationResult.route !== 'Filled'
                             ? true
                             : false
                         }
@@ -327,7 +285,6 @@ function TeamEdit(props) {
                         variant="outlined"
                         onInput={clearFun}
                       >
-                        ]{" "}
                         {routes.map((option) => (
                           <option
                             key={option.value}
@@ -339,12 +296,12 @@ function TeamEdit(props) {
                         ))}
                       </TextField>
                     </div>
-                    <div className={classes2.inputs}>
+                    <div className={classes.inputs}>
                       <TextField
                         id="comment"
                         error={
-                          validationResult["comment"] !== undefined &&
-                          validationResult.comment !== "Filled"
+                          validationResult['comment'] !== undefined &&
+                          validationResult.comment !== 'Filled'
                             ? true
                             : false
                         }
@@ -364,7 +321,7 @@ function TeamEdit(props) {
                 </Grid>
               </Grid>
             </div>
-            <div className={classes1.topright}>
+            <div className={classes.topright}>
               <Button
                 component={Link}
                 to={`/`}
@@ -376,7 +333,7 @@ function TeamEdit(props) {
                 Back to List
               </Button>
             </div>
-            <div className={classes1.bottomright}>
+            <div className={classes.bottomright}>
               <Button
                 variant="contained"
                 color="default"
@@ -390,35 +347,9 @@ function TeamEdit(props) {
           </div>
         </div>
         <Notification alertStates={alertStates} handleAlert={setAlertStates} />
-      </>
+      </React.Fragment>
     );
   }
-
-  return (
-    <>
-      <div
-        style={{
-          margin: "auto",
-          width: "50%",
-          position: "absolute",
-          top: "50%",
-          left: "50%",
-          fontFamily: "cursive",
-          fontWeight: "bolder",
-          fontSize: "1.5em",
-        }}
-      >
-        <Loader
-          type="BallTriangle"
-          color="green"
-          height={100}
-          width={100}
-          secondaryColor="blue"
-        />
-        Loading ...
-      </div>
-    </>
-  );
-}
-
+  return <Spinner type="BallTriangle" color="green" />;
+};
 export default React.memo(TeamEdit);
