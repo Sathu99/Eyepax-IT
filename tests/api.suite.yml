@@ -1,0 +1,18 @@
+actor: ApiTester
+step_decorators:
+  - \Codeception\Step\AsJson
+modules:
+  enabled:
+    - REST:
+        url: 'http://localhost:8000/'
+        depends: Symfony
+    - Symfony:
+        app_path: 'src'
+        environment: 'test'
+        environment_file: .env.test
+        em_service: 'doctrine.orm.entity_manager'
+    - Doctrine2:
+        depends: Symfony
+        part: ORM
+        cleanup: true
+        run_database_migrations: true

@@ -104,7 +104,7 @@ class CrudController extends AbstractApiController
     }
 
     /**
-     * @Route("/update/{id<\d+>}",name="update_eow",methods={"PUT"})
+     * @Route("/update/{id<\d+>}",name="update_row",methods={"PUT"})
      * @param int $id
      * @param Request $request
      * @return Response
