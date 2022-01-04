@@ -4,40 +4,34 @@ import Snackbar from '@material-ui/core/Snackbar';
 import MuiAlert from '@material-ui/lab/Alert';
 
 const Notification = (props) => {
-  const { vertical, horizontal, openAlert, msg, type, handleAlert } = props;
+  const { vertical, horizontal, openAlert, msg, type } = props.alertStates;
 
   const handleCloseAlert = () => {
-    handleAlert({ vertical, horizontal, msg, type, openAlert: false });
+    props.handleAlert({ ...props.alertStates, openAlert: false });
   };
 
   Notification.propTypes = {
-    vertical: PropTypes.string.isRequired,
-    horizontal: PropTypes.string.isRequired,
-    openAlert: PropTypes.bool.isRequired,
-    msg: PropTypes.string.isRequired,
-    type: PropTypes.string.isRequired,
     handleAlert: PropTypes.func.isRequired,
+    alertStates: PropTypes.object.isRequired,
   };
 
   return (
-    <>
-      <Snackbar
-        anchorOrigin={{ vertical, horizontal }}
-        open={openAlert}
+    <Snackbar
+      anchorOrigin={{ vertical, horizontal }}
+      open={openAlert}
+      onClose={handleCloseAlert}
+      key={vertical + horizontal}
+      autoHideDuration={6000}
+    >
+      <MuiAlert
+        elevation={6}
+        variant="filled"
         onClose={handleCloseAlert}
-        key={vertical + horizontal}
-        autoHideDuration={6000}
+        severity={type}
       >
-        <MuiAlert
-          elevation={6}
-          variant="filled"
-          onClose={handleCloseAlert}
-          severity={type}
-        >
-          {msg}
-        </MuiAlert>
-      </Snackbar>
-    </>
+        {msg}
+      </MuiAlert>
+    </Snackbar>
   );
 };
 

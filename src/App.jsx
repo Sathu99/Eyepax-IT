@@ -5,8 +5,8 @@ import {
   Route,
   Redirect,
 } from 'react-router-dom';
-import TeamEdit from './Views/TeamEdit';
 import TeamShow from './Views/TeamShow';
+import TeamEdit from './Views/TeamEdit';
 
 function App() {
   return (

@@ -17,7 +17,7 @@ import CloseIcon from '@material-ui/icons/Close';
 import axios from 'axios';
 import Notification from '../Components/Notification';
 import StickyHeadTable from '../Components/Table';
-import { column, routes } from '../data/List';
+import { column, routes } from '../data/Lists';
 import Spinner from '../Components/Spinner';
 import Validate from '../utils/validate';
 
@@ -102,7 +102,7 @@ const TeamShow = () => {
   const [openAdd, setOpenAdd] = useState(false);
   const [openDelete, setOpenDelete] = useState(false);
   const [person, setPerson] = useState([]);
-  const [fields, setFiels] = useState({});
+  const [fields, setFiels] = useState({ comment: '' });
   const [validationResult, setValidationResult] = useState({});
   const [alertStates, setAlertStates] = useState({
     openAlert: false,
@@ -147,7 +147,7 @@ const TeamShow = () => {
   }, []);
 
   const handleInputChange = (event) => {
-    const name = target.id;
+    const name = event.target.id;
     fields[name] = event.target.value;
     setFiels({ ...fields });
   };
@@ -165,17 +165,21 @@ const TeamShow = () => {
     [data]
   );
 
-  const handleCloseView = () => {
-    setPerson([]);
-    setOpenView(false);
+  const handleCloseView = (event, reason) => {
+    if (reason !== 'backdropClick') {
+      setPerson([]);
+      setOpenView(false);
+    }
   };
 
   const handleOpenAdd = useCallback(() => {
     setOpenAdd(true);
   }, []);
 
-  const handleCloseAdd = () => {
-    setOpenAdd(false);
+  const handleCloseAdd = (event, reason) => {
+    if (reason !== 'backdropClick') {
+      setOpenAdd(false);
+    }
   };
 
   const handleOpenDelete = useCallback(
@@ -196,7 +200,7 @@ const TeamShow = () => {
           'Content-Type': 'application/json',
         },
       })
-        .then((res) => {
+        .then(() => {
           setPerson([]);
           setData(data.filter((emp) => emp.id !== person[0].id));
           setAlertStates({
@@ -223,8 +227,9 @@ const TeamShow = () => {
 
   const handleSubmit = () => {
     setValidationResult({ ...Validate(fields).errors });
-    console.log(fields, validationResult);
     if (Validate(fields).count >= 5) {
+      console.log(fields, validationResult);
+
       axios({
         url: 'http://127.0.0.1:8000/api/team/add',
         method: 'POST',
@@ -245,6 +250,14 @@ const TeamShow = () => {
             });
             setData([...data, res.data]);
             console.log(res.data);
+          } else {
+            setAlertStates({
+              openAlert: true,
+              msg: res.data.message,
+              vertical: 'top',
+              horizontal: 'right',
+              type: 'error',
+            });
           }
         })
         .catch((err) => {
@@ -268,7 +281,6 @@ const TeamShow = () => {
       });
     }
   };
-
   if (data.length > 0) {
     return (
       <div>
@@ -284,7 +296,6 @@ const TeamShow = () => {
             onClose={handleCloseView}
             aria-labelledby="customized-dialog-title"
             open={openView}
-            disableBackdropClick="true"
             fullWidth={true}
             maxWidth="sm"
           >
@@ -335,12 +346,10 @@ const TeamShow = () => {
             </DialogActions>
           </Dialog>
         )}
-
         <Dialog
           onClose={handleCloseAdd}
           aria-labelledby="customized-dialog-title"
           open={openAdd}
-          disableBackdropClick="true"
         >
           <StyledDialogTitle
             id="customized-dialog-title"
@@ -493,21 +502,19 @@ const TeamShow = () => {
             </div>
           </DialogContent>
         </Dialog>
-
         {person.length > 0 && (
           <Dialog
             open={openDelete}
             onClose={handleCloseDelete}
             aria-labelledby="alert-dialog-title"
             aria-describedby="alert-dialog-description"
-            disableBackdropClick="true"
           >
             <DialogTitle id="alert-dialog-title">
               {'Delete Member from Team'}
             </DialogTitle>
             <DialogContent>
               <DialogContentText id="alert-dialog-description">
-                Are you Sure want to Delete&nbsp; "{person[0].name}"?
+                Are you Sure want to Delete&nbsp; {person[0].name}?
               </DialogContentText>
             </DialogContent>
             <DialogActions>

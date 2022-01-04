@@ -7,7 +7,7 @@ import { Link, useHistory, useParams } from 'react-router-dom';
 import axios from 'axios';
 import Notification from '../Components/Notification';
 import Validate from '../utils/validate';
-import { routes } from '../data/List';
+import { routes } from '../data/Lists';
 import Spinner from '../Components/Spinner';
 
 const useStyles = makeStyles((theme) => ({
@@ -58,7 +58,7 @@ const TeamEdit = () => {
   const classes = useStyles();
   const history = useHistory();
   const { id } = useParams();
-  const [fields, setFiels] = React.useState({});
+  const [fields, setFiels] = React.useState({ comment: '' });
   const [validationResult, setValidationResult] = React.useState({});
   const [alertStates, setAlertStates] = React.useState({
     openAlert: false,
@@ -76,23 +76,23 @@ const TeamEdit = () => {
 
   useEffect(() => {
     axios({
-      url: `http://127.0.0.1:8000/api/team/view/${id}`,
+      url: `http://127.0.0.1:8000/api/team/view/${parseInt(id)}`,
       method: 'GET',
       headers: {
         'Content-Type': 'application/json',
       },
     })
       .then((res) => {
-        if (res.status === 200) {
-          setFiels(res.data);
-          setAlertStates({
-            openAlert: true,
-            msg: 'Your Details was Successfully fetched',
-            vertical: 'top',
-            horizontal: 'center',
-            type: 'success',
-          });
-        }
+        // if (res.status === 200) {
+        setFiels(res.data);
+        setAlertStates({
+          openAlert: true,
+          msg: 'Your Details was Successfully fetched',
+          vertical: 'top',
+          horizontal: 'center',
+          type: 'success',
+        });
+        // }
       })
       .catch((err) => {
         setAlertStates({
@@ -114,9 +114,8 @@ const TeamEdit = () => {
   const handleSubmit = () => {
     setValidationResult({ ...Validate(fields).errors });
     if (Validate(fields).count >= 5) {
-      console.log(fields);
       axios({
-        url: `http://127.0.0.1:8000/api/team/update/${id}`,
+        url: `http://127.0.0.1:8000/api/team/update/${parseInt(id)}`,
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
@@ -153,8 +152,7 @@ const TeamEdit = () => {
       });
     }
   };
-
-  if (Object.keys(fields).length > 0) {
+  if (Object.keys(fields).length > 1) {
     const date = new Date(fields.joinedDate);
     return (
       <React.Fragment>

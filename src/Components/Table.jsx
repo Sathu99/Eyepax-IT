@@ -156,12 +156,12 @@ TablePaginationActions.propTypes = {
 function StickyHeadTable(props) {
   const classes = useStyles();
   const [page, setPage] = React.useState(0);
-  const [rowsPerPage, setRowsPerPage] = React.useState(5);
+  const [rowsPerPage, setRowsPerPage] = React.useState(10);
 
   StickyHeadTable.propTypes = {
-    showAddModal: PropTypes.func.isRequired,
     columns: PropTypes.arrayOf.isRequired,
     rows: PropTypes.arrayOf.isRequired,
+    showAddModal: PropTypes.func.isRequired,
     showDetailModal: PropTypes.func.isRequired,
     deleteMember: PropTypes.func.isRequired,
   };
